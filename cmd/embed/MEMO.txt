@@ -1,0 +1,41 @@
+$ ./treedb 
+ Type help for usage.
+> help
+    cache       set cache timeout for path
+                cache PATH TIMEOUT(never or delete or 0 or time.Duration)
+    connect     connect treedb server
+                connect ADDRESS(tcp[4|6]://host:port or unix://filepath)
+    create      create database
+                create NAME [FROM TEMPLATE]
+    delete      delete key pointed by path
+                delete PATH
+    get         get value stored at path
+                get PATH
+    select      select database
+                select NAME
+    set         set value stored to path
+                set PATH VALUE
+    touch       update timestamp for in memory path
+                touch PATH
+
+> connect tcp4://:3456
+result: OK
+> create gusadb
+result: OK
+> select gusadb
+result: OK
+> set "top/hyogo/kobe"  1234
+error: treedb: invalid path
+> set top/hyogo/kobe  1234
+result: OK
+> get top/hyogo/kobe
+result: 1234
+> exit
+command not found.
+ using help to get full list of commands.
+
+> quit
+command not found.
+ using help to get full list of commands.
+
+> 
