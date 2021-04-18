@@ -1,0 +1,127 @@
+package main
+
+import (
+	"os"
+        "time"
+	"fmt"
+        "reflect"
+	"github.com/kezhuw/treedb"
+	//"github.com/kezhuw/treedb/cmd/treedb/cmds"
+	//"github.com/peterh/liner"
+        "bytes"
+        "encoding/gob"
+)
+
+
+
+func P(t interface{}) {
+    fmt.Println(reflect.TypeOf(t))
+}
+
+
+func settree(db *treedb.DB, path string, data interface{}) {
+    buf := bytes.NewBuffer(nil)
+    _ = gob.NewEncoder(buf).Encode(&data)
+
+    db.Set(path, buf.Bytes())
+}    
+
+
+func gettree(db *treedb.DB, path string) interface{}{
+
+  	value, err := db.Get(path, treedb.FieldAny)
+  	//value, err := db.Get("top/hyogo", treedb.FieldAny)
+	if err != nil {
+             fmt.Printf("ERROR %v\n", err)
+             os.Exit(0)
+	}
+
+        P(value)
+//        printValue(value)
+       	switch value := value.(type) {
+	case []byte:
+                var data interface{}
+                buf := bytes.NewBuffer(value)
+                _ = gob.NewDecoder(buf).Decode(&data)
+                //return &data
+                return &data
+	case map[string]interface{}:
+		fmt.Printf("%v\n",value)
+                return nil
+	default:
+		fmt.Printf("unexpected value type: %s", reflect.TypeOf(value))
+                return nil
+
+	}
+
+
+
+}    
+
+
+func main() {
+
+  client, err := treedb.Dial("tcp4://:3456", nil)
+  if err != nil {
+	fmt.Printf("%v\n",err)
+        os.Exit(0)
+  }
+
+  db, err := client.OpenDB("gusadb", nil)
+  if err != nil {
+        os.Exit(0)
+  }
+
+
+    a := newTree()
+    P(a)
+    for _, v := range []int{5,6,4,7,3,8,2,9,1,0} {
+        a.insertTree(Int(v))
+    }
+    P(a)
+    a.printTree()
+    for i := 0; i < 10; i++ {
+        fmt.Println(a.searchTree(Int(i)))
+    }
+    for i := 0; i < 10; i++ {
+        a.deleteTree(Int(i))
+        a.printTree()
+    }
+
+    settree(db,"top/hyogo/tree",a);
+    time.Sleep(time.Second * 1)
+    b := gettree(db,"top/hyogo/tree");
+    P(b)
+
+    fmt.Println(reflect.TypeOf(b))
+   // bt := (*b).(Tree)
+   //     fmt.Println("%v",bt)
+    //P(*bt)
+    //fmt.Println(err)
+    //    bt.printTree()
+    
+    switch variable := b.(type) {
+    case interface{}:
+        fmt.Println("interface {}")
+        bt := variable.(Tree)
+        bt.printTree()
+    case int:
+        fmt.Println(variable)
+    case string:
+        fmt.Println(variable)
+    default:
+        fmt.Println("Default")
+        P(variable)
+    }
+    
+/*
+    b.printTree()
+    for i := 0; i < 10; i++ {
+        fmt.Println(b.searchTree(Int(i)))
+    }
+    for i := 0; i < 10; i++ {
+        b.deleteTree(Int(i))
+        b.printTree()
+    }
+*/
+}
